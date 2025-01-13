@@ -2,10 +2,21 @@ from sqlmodel import SQLModel, Field, UniqueConstraint
 from datetime import date, datetime
 from pydantic import EmailStr
 
+
+# class for datetime.date and datetime.datetime pydantic compatibility
+class BaseModel(SQLModel):
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {
+            date: lambda v: v.isoformat(),  # serialize date to string
+            datetime: lambda v: v.isoformat(),  # serialize datetime to string
+        }
+
+
 class Fighter(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     full_name: str = Field(index=True)
-    birth_date: date
+    birth_date: date  # pydantic compatible datetime.date
     weight_class: str | None = Field(index=True)
     weight: float  # weight in lbs
     height: float  # height in feet
@@ -15,17 +26,10 @@ class Fighter(SQLModel, table=True):
     no_contests: int = Field(default=0)
 
 
-class Card(SQLModel, table=True):
-    id: int = Field(default=None, primary_key=True)
-    numbered: bool = Field(default=False)
-    name: str = Field(index=True)
-    date: datetime.date
-
-
 class Fight(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     rounds: int = Field(default=3)
-    card_id = Field(index=True, foreign_key="card.id")
+    card_id: int = Field(index=True, foreign_key="card.id")
     red_corner: int = Field(foreign_key="fighter.id", index=True)
     blue_corner: int = Field(foreign_key="fighter.id", index=True)
     winner: int | None = Field(foreign_key="fighter.id", index=True)
@@ -51,3 +55,10 @@ class Pick(SQLModel, table=True):
 
     # prevent a user from making multiple picks for the same fight
     __table_args__ = (UniqueConstraint("user_id", "fight_id", name="unique_user_fight_pick"),)
+
+
+class Card(SQLModel, table=True):
+    id: int = Field(default=None, primary_key=True)
+    numbered: bool = Field(default=False)
+    name: str = Field(index=True)
+    date: date
