@@ -3,16 +3,6 @@ from datetime import date, datetime
 from pydantic import EmailStr
 
 
-# class for datetime.date and datetime.datetime pydantic compatibility
-class BaseModel(SQLModel):
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {
-            date: lambda v: v.isoformat(),  # serialize date to string
-            datetime: lambda v: v.isoformat(),  # serialize datetime to string
-        }
-
-
 class Fighter(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     full_name: str = Field(index=True)
